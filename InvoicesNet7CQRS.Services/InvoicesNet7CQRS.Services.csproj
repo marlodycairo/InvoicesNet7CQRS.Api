@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="QueryHandlers\**" />
+    <EmbeddedResource Remove="QueryHandlers\**" />
+    <None Remove="QueryHandlers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvoicesNet7CQRS.Domain\InvoicesNet7CQRS.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
