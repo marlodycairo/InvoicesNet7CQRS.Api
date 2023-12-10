@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34003.232
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicesNet7CQRS.Api", "InvoicesNet7CQRS.Api\InvoicesNet7CQRS.Api.csproj", "{46C6FDD6-FBDD-4FDB-9514-5313881E1D01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoicesNet7CQRS.Api", "InvoicesNet7CQRS.Api\InvoicesNet7CQRS.Api.csproj", "{46C6FDD6-FBDD-4FDB-9514-5313881E1D01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicesNet7CQRS.Data", "InvoicesNet7CQRS.Data\InvoicesNet7CQRS.Data.csproj", "{398C44F0-473E-4060-831A-3508E91A1181}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoicesNet7CQRS.Data", "InvoicesNet7CQRS.Data\InvoicesNet7CQRS.Data.csproj", "{398C44F0-473E-4060-831A-3508E91A1181}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicesNet7CQRS.Domain", "InvoicesNet7CQRS.Domain\InvoicesNet7CQRS.Domain.csproj", "{DBD9DC70-9015-45D0-8083-4CEF90DECEE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoicesNet7CQRS.Domain", "InvoicesNet7CQRS.Domain\InvoicesNet7CQRS.Domain.csproj", "{DBD9DC70-9015-45D0-8083-4CEF90DECEE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicesNet7CQRS.Services", "InvoicesNet7CQRS.Services\InvoicesNet7CQRS.Services.csproj", "{D4FA4D9D-A5D8-4A64-8080-0D51443B1CFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InvoicesNet7CQRS.Services", "InvoicesNet7CQRS.Services\InvoicesNet7CQRS.Services.csproj", "{D4FA4D9D-A5D8-4A64-8080-0D51443B1CFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoicesNet7CQRS.Tests", "InvoicesNet7CQRS.Tests\InvoicesNet7CQRS.Tests.csproj", "{8D576EE8-7B5C-4020-96DE-33CC1C09410A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{D4FA4D9D-A5D8-4A64-8080-0D51443B1CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4FA4D9D-A5D8-4A64-8080-0D51443B1CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4FA4D9D-A5D8-4A64-8080-0D51443B1CFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D576EE8-7B5C-4020-96DE-33CC1C09410A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D576EE8-7B5C-4020-96DE-33CC1C09410A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D576EE8-7B5C-4020-96DE-33CC1C09410A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D576EE8-7B5C-4020-96DE-33CC1C09410A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

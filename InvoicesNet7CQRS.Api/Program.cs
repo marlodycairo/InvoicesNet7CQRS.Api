@@ -1,7 +1,7 @@
 
 using InvoicesNet7CQRS.Api.Mediator;
-using InvoicesNet7CQRS.Api.Utils;
 using InvoicesNet7CQRS.Data.Context;
+using InvoicesNet7CQRS.Data.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +24,8 @@ namespace InvoicesNet7CQRS.Api
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionDefault"));
             });
 
+            builder.Services.AddScoped<IDbContext, ApplicationDbContext>();
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -42,7 +44,7 @@ namespace InvoicesNet7CQRS.Api
                 });
 
             builder.Services.AddMediaRConf();
-            builder.Services.AddScoped<JwtManage>();
+            //builder.Services.AddScoped<JwtManage>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

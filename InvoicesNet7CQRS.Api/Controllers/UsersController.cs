@@ -1,4 +1,6 @@
-﻿using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
+﻿using InvoicesNet7CQRS.Api.Models;
+using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
+using InvoicesNet7CQRS.Domain.Commands.UserCommands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -68,6 +70,19 @@ namespace InvoicesNet7CQRS.Api.Controllers
             await _mediator.Send(new DeleteUserCommand(id));
 
             return Ok();
+        }
+
+        [HttpGet("GetUserByUsername")]
+        public async Task<ActionResult> GetUserByUsername(string username)
+        {
+            var response = await _mediator.Send(new GetUserByUsernameQuery(username!));
+
+            if (response is null)
+            {
+                return NotFound();
+            }
+
+            return response.Error is null ? Ok(response) : StatusCode(StatusCodes.Status500InternalServerError, response);
         }
     }
 }

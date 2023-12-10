@@ -1,6 +1,7 @@
-﻿using InvoicesNet7CQRS.Data.Context;
-using InvoicesNet7CQRS.Data.Entities;
+﻿using InvoicesNet7CQRS.Data.Entities;
+using InvoicesNet7CQRS.Data.Interfaces;
 using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
+using InvoicesNet7CQRS.Domain.Commands.UserCommands;
 using InvoicesNet7CQRS.Domain.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
     {
         public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, GenericResponse<User>>
         {
-            private readonly ApplicationDbContext _context;
+            private readonly IDbContext _context;
 
-            public CreateUserCommandHandler(ApplicationDbContext context)
+            public CreateUserCommandHandler(IDbContext context)
             {
                 _context = context;
             }
@@ -22,20 +23,20 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
             {
                 var response = new GenericResponse<User>();
 
-                if (response is null)
+                if (response is not null)
                 {
-                    response!.Message = "El usuario no pudo ser creado";
+                    await _context.Users.AddAsync(request.User);
+
+                    await _context.SaveAsync();
+
+                    response.Result = request.User;
+
+                    response.Message = $"Saved successfully!";
 
                     return response;
                 }
 
-                await _context.Users.AddAsync(request.User);
-
-                await _context.SaveChangesAsync(cancellationToken);
-
-                response.Result = request.User;
-
-                response.Message = $"Guardado exitosamente!";
+                response!.Message = "The user not created";
 
                 return response;
             }
@@ -43,9 +44,9 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
         public class GetAllUsersCommandHander : IRequestHandler<GetAllUsersQuery, GenericResponse<IEnumerable<User>>>
         {
-            private readonly ApplicationDbContext _context;
+            private readonly IDbContext _context;
 
-            public GetAllUsersCommandHander(ApplicationDbContext context)
+            public GetAllUsersCommandHander(IDbContext context)
             {
                 _context = context;
             }
@@ -64,9 +65,9 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
         public class GetUserByIdCommandHandler : IRequestHandler<GetUserByIdQuery, GenericResponse<User>>
         {
-            private readonly ApplicationDbContext _context;
+            private readonly IDbContext _context;
 
-            public GetUserByIdCommandHandler(ApplicationDbContext context)
+            public GetUserByIdCommandHandler(IDbContext context)
             {
                 _context = context;
             }
@@ -77,12 +78,14 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
                 var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == request.Id);
 
-                if (user is null)
+                if (user is not null)
                 {
-                    response.Message = "Usuario no encontrado";
+                    response.Result = user;
+
+                    return response;
                 }
 
-                response.Result = user;
+                response.Message = "User not found!";
 
                 return response;
             }
@@ -90,9 +93,9 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
         public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand>
         {
-            private readonly ApplicationDbContext _context;
+            private readonly IDbContext _context;
 
-            public DeleteUserCommandHandler(ApplicationDbContext context)
+            public DeleteUserCommandHandler(IDbContext context)
             {
                 _context = context;
             }
@@ -103,15 +106,15 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
                 _context.Users.Remove(user!);
 
-                await _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveAsync();
             }
         }
 
         public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, GenericResponse<User>>
         {
-            private readonly ApplicationDbContext _context;
+            private readonly IDbContext _context;
 
-            public UpdateUserCommandHandler(ApplicationDbContext context)
+            public UpdateUserCommandHandler(IDbContext context)
             {
                 _context = context;
             }
@@ -120,24 +123,43 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
             {
                 var response = new GenericResponse<User>();
 
-                //_context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-
                 var user = await _context.Users.FindAsync(request._user.Id, cancellationToken);
 
-                if (user is null)
+                if (user is not null)
                 {
-                    response.Message = "Usuario no encontrado.";
+                    _context.Users.Update(request._user);
+
+                    await _context.SaveAsync();
+
+                    response.Result = request._user;
+
+                    response.Message = $"User updated successfully.";
 
                     return response;
                 }
 
-                _context.Users.Update(request._user);
+                response.Message = "User not found!";
 
-                await _context.SaveChangesAsync(cancellationToken);
+                return response;
+            }
+        }
 
-                response.Result = request._user;
+        public class GetUserByUsernameCommandHandler : IRequestHandler<GetUserByUsernameQuery, GenericResponse<IEnumerable<User>>>
+        {
+            private readonly IDbContext _context;
 
-                response.Message = $"Usuario actualizado exitosamente";
+            public GetUserByUsernameCommandHandler(IDbContext context)
+            {
+                _context = context;
+            }
+
+            public async Task<GenericResponse<IEnumerable<User>>> Handle(GetUserByUsernameQuery request, CancellationToken cancellationToken)
+            {
+                var response = new GenericResponse<IEnumerable<User>>();
+
+                var users = await _context.Users.AsNoTracking().Where(x => x.Username == request.UserName).ToListAsync(cancellationToken);
+
+                response.Result = users;
 
                 return response;
             }

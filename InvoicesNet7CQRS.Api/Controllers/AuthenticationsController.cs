@@ -1,8 +1,6 @@
 ﻿using InvoicesNet7CQRS.Api.Models;
-using InvoicesNet7CQRS.Api.Utils;
-using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
+using InvoicesNet7CQRS.Domain.Commands.AuthenticationCommands;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InvoicesNet7CQRS.Api.Controllers
@@ -12,41 +10,23 @@ namespace InvoicesNet7CQRS.Api.Controllers
     public class AuthenticationsController : ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly JwtManage _jwtManage;
 
-        public AuthenticationsController(IMediator mediator, JwtManage jwtManage)
+        public AuthenticationsController(IMediator mediator)
         {
             _mediator = mediator;
-            _jwtManage = jwtManage;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromQuery] Login login)
+        public async Task<IActionResult> GetToken([FromQuery]Credential credential)
         {
-            if (login == null)
+            if (credential == null)
             {
                 return BadRequest();
             }
 
-            var token = "";
-            if (await IsUserValid(login))
-            {
-                token = await _jwtManage.GenerateJsonWebToken(login);
-            }
+            var response = await _mediator.Send(new GetAuthenticationQuery(credential.Username!, credential.Pass!));
 
-            return Ok(new { Message = "User Authenticated", Result = token });
-        }
-
-        private async Task<bool> IsUserValid(Login login)
-        {
-            var users = await _mediator.Send(new GetAllUsersQuery());
-
-            if (users.Result!.Any(x => x.Username == login.Username && x.Pass == login.Pass))
-            {
-                return true;
-            }
-
-            return false;
+            return Ok(response);
         }
     }
 }
