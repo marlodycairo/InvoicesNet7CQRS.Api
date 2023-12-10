@@ -11,6 +11,7 @@ namespace InvoicesNet7CQRS.Api.Utils
         private const string JWTKEY = "Jwt:Key";
         private const string JWTUSER = "Jwt:Issuer";
         private const string JWTAUDIENCE = "Jwt:Audience";
+        private const string URL = "https://localhost:7086";
         private readonly IConfiguration _config;
 
         public JwtManage(IConfiguration configuration)
@@ -28,7 +29,7 @@ namespace InvoicesNet7CQRS.Api.Utils
             {
                 new Claim(ClaimTypes.Name, login.Username!),
                 new Claim(JwtRegisteredClaimNames.Sub, login.Username!),
-                new Claim(JwtRegisteredClaimNames.Aud, "https://localhost:7086"),
+                new Claim(JwtRegisteredClaimNames.Aud, URL),
                 new Claim(ClaimTypes.Expiration, DateTime.UtcNow.AddDays(5).ToString())
             };
 
