@@ -39,12 +39,7 @@ namespace InvoicesNet7CQRS.Api.Controllers
         {
             var users = await _mediator.Send(new GetAllUsersQuery());
 
-            if (users.Result!.Any(x => x.Username == login.Username && x.Pass == login.Pass))
-            {
-                return true;
-            }
-
-            return false;
+            return users.Result!.Any(x => x.Username == login.Username && x.Pass == login.Pass);
         }
     }
 }
