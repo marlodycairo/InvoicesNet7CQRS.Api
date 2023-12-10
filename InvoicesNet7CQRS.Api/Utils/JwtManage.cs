@@ -8,6 +8,9 @@ namespace InvoicesNet7CQRS.Api.Utils
 {
     public class JwtManage
     {
+        private const string JWTKEY = "Jwt:Key";
+        private const string JWTUSER = "Jwt:Issuer";
+        private const string JWTAUDIENCE = "Jwt:Audience";
         private readonly IConfiguration _config;
 
         public JwtManage(IConfiguration configuration)
@@ -17,7 +20,7 @@ namespace InvoicesNet7CQRS.Api.Utils
 
         public async Task<string> GenerateJsonWebToken(Login login)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config[JWTKEY]!));
 
             var credential = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -30,8 +33,8 @@ namespace InvoicesNet7CQRS.Api.Utils
             };
 
             var token = new JwtSecurityToken(
-                _config["Jwt:Issuer"],
-                _config["Jwt:Audience"],
+                _config[JWTUSER],
+                _config[JWTAUDIENCE],
                 claims,
                 expires: DateTime.UtcNow.AddDays(5),
                 signingCredentials: credential);
