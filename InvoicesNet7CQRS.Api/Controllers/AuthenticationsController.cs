@@ -2,7 +2,6 @@
 using InvoicesNet7CQRS.Api.Utils;
 using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InvoicesNet7CQRS.Api.Controllers
@@ -28,13 +27,12 @@ namespace InvoicesNet7CQRS.Api.Controllers
                 return BadRequest();
             }
 
-            var token = "";
             if (await IsUserValid(login))
             {
-                token = await _jwtManage.GenerateJsonWebToken(login);
+               return Ok(new { Message = "User Authenticated", Result = await _jwtManage.GenerateJsonWebToken(login) });
             }
 
-            return Ok(new { Message = "User Authenticated", Result = token });
+            return Unauthorized();
         }
 
         private async Task<bool> IsUserValid(Login login)
