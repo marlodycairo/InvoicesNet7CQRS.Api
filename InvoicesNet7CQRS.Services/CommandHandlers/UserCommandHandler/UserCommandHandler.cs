@@ -120,8 +120,6 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
             {
                 var response = new GenericResponse<User>();
 
-                //_context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-
                 var user = await _context.Users.FindAsync(request._user.Id, cancellationToken);
 
                 if (user is null)
