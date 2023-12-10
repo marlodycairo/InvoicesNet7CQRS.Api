@@ -1,7 +1,8 @@
-
+using FluentValidation;
 using InvoicesNet7CQRS.Api.Mediator;
 using InvoicesNet7CQRS.Data.Context;
 using InvoicesNet7CQRS.Data.Interfaces;
+using InvoicesNet7CQRS.Domain.Validations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,12 @@ namespace InvoicesNet7CQRS.Api
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommanValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserCommandValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<DeleteUserCommandValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<GetUserByIdQueryValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<GetUserByUsernameQueryValidator>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(opt =>
             {
