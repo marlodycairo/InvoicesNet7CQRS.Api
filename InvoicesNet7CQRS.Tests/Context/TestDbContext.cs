@@ -2,6 +2,7 @@
 using InvoicesNet7CQRS.Data.Entities;
 using InvoicesNet7CQRS.Tests.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InvoicesNet7CQRS.Tests.Context
 {
@@ -11,8 +12,13 @@ namespace InvoicesNet7CQRS.Tests.Context
 
         public TestDbContext()
         {
+            var serviceProvider = new ServiceCollection()
+                .AddEntityFrameworkInMemoryDatabase()
+                .BuildServiceProvider();
+
             _options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "InMemoryDatabaseTest")
+                .UseInternalServiceProvider(serviceProvider)
                 .Options;
 
             using (var context = new ApplicationDbContext(_options))
@@ -25,7 +31,7 @@ namespace InvoicesNet7CQRS.Tests.Context
             }
         }
 
-        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<User> Users { get; set; }
 
         public int Save()
         {

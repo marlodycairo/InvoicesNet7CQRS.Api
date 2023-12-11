@@ -23,7 +23,7 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
             {
                 var response = new GenericResponse<User>();
 
-                if (response is not null)
+                if (request.User is not null)
                 {
                     await _context.Users.AddAsync(request.User);
 

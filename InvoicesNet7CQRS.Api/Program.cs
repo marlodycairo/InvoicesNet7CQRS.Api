@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using InvoicesNet7CQRS.Api.Mediator;
 using InvoicesNet7CQRS.Data.Context;
 using InvoicesNet7CQRS.Data.Interfaces;
@@ -19,6 +20,8 @@ namespace InvoicesNet7CQRS.Api
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
 
             builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommanValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserCommandValidator>();
@@ -51,7 +54,6 @@ namespace InvoicesNet7CQRS.Api
                 });
 
             builder.Services.AddMediaRConf();
-            //builder.Services.AddScoped<JwtManage>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

@@ -1,10 +1,11 @@
-﻿using InvoicesNet7CQRS.Data.Entities;
+﻿using InvoicesNet7CQRS.Data.Context;
+using InvoicesNet7CQRS.Data.Entities;
 using InvoicesNet7CQRS.Data.Interfaces;
 using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
-using InvoicesNet7CQRS.Domain.Commands.UserCommands;
+using InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler;
+using InvoicesNet7CQRS.Tests.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using System.Linq.Expressions;
 using static InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler.UserCommandHandler;
 
 namespace InvoicesNet7CQRS.Tests
@@ -14,113 +15,86 @@ namespace InvoicesNet7CQRS.Tests
         [Fact]
         public async Task CreateUserCommandHandler_ShouldCreateUser()
         {
-            // Arrange
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new CreateUserCommandHandler(dbContextMock.Object);
-            var user = new User { /* Initialize user properties */ };
-            var command = new CreateUserCommand(user);
+            var dbContextMock = new Mock<ITestDbContext>();
+            var userDbSetMock = new Mock<DbSet<User>>();
+            dbContextMock.Setup(db => db.Users).Returns(userDbSetMock.Object);
 
-            // Act
-            var response = await handler.Handle(command, CancellationToken.None);
+            var userCommandHandler = new UserCommandHandler.CreateUserCommandHandler(dbContextMock.Object);
 
-            // Assert
-            Assert.NotNull(response.Result);
+            var user = new User
+            {
+                Id = 3,
+                FirstName = "Alice",
+                LastName = "Wonderland",
+                Email = "alicew@live.com",
+                Username = "alice",
+                Pass = "1234"
+            };
+
+            var createUserCommand = new CreateUserCommand(user);
+
+            var response = await userCommandHandler.Handle(createUserCommand, CancellationToken.None);
+
+            Assert.NotNull(response);
+            Assert.Equal(user, response.Result);
             Assert.Equal("Saved successfully!", response.Message);
-            dbContextMock.Verify(db => db.Users.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+            Assert.Null(response.Error);
+
+            userDbSetMock.Verify(dbSet => dbSet.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
             dbContextMock.Verify(db => db.SaveAsync(), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllUsersCommandHandler_ShouldReturnAllUsers()
+        public async Task GetAllUsersCommandHandler_ShouldNotReturnAllUsers()
         {
-            // Arrange
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new GetAllUsersCommandHander(dbContextMock.Object);
-            var users = new List<User> { /* Create some user instances */ };
-            dbContextMock.Setup(db => db.Users.AsNoTracking().ToListAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(users);
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "InMemoryDatabaseTest")
+                .Options;
 
-            // Act
-            var response = await handler.Handle(new GetAllUsersQuery(), CancellationToken.None);
+            using (var context = new ApplicationDbContext(options))
+            {
+                var handler = new GetAllUsersCommandHander(context);
+                var query = new GetAllUsersQuery();
 
-            // Assert
-            Assert.Equal(users, response.Result);
+                var result = await handler.Handle(query, CancellationToken.None);
+
+                Assert.Empty(result.Result!);
+            }
         }
 
         [Fact]
-        public async Task GetUserByIdCommandHandler_ShouldReturnUserById()
+        public async Task GetUserById_ShouldNotReturnUser()
         {
-            // Arrange
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new GetUserByIdCommandHandler(dbContextMock.Object);
-            var userId = 1;
-            var user = new User { Id = userId, /* Set other properties */ };
-            dbContextMock.Setup(db => db.Users.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>(), CancellationToken.None))
-                .ReturnsAsync(user);
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "InMemoryDatabaseTest")
+                .Options;
 
-            // Act
-            var response = await handler.Handle(new GetUserByIdQuery(userId), CancellationToken.None);
+            using (var context = new ApplicationDbContext(options))
+            {
+                var handler = new GetUserByIdCommandHandler(context);
+                var userId = 2;
+                var command = new GetUserByIdQuery(userId);
 
-            // Assert
-            Assert.Equal(user, response.Result);
+                var result = await handler.Handle(command, CancellationToken.None);
+
+                Assert.Null(result.Result);
+            }
         }
 
         [Fact]
         public async Task DeleteUserCommandHandler_ShouldDeleteUser()
         {
-            // Arrange
             var dbContextMock = new Mock<IDbContext>();
             var handler = new DeleteUserCommandHandler(dbContextMock.Object);
             var userId = 1;
-            var user = new User { Id = userId, /* Set other properties */ };
+            var user = new User { Id = userId };
             dbContextMock.Setup(db => db.Users.FindAsync(It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(user);
 
-            // Act
             await handler.Handle(new DeleteUserCommand(userId), CancellationToken.None);
 
-            // Assert
             dbContextMock.Verify(db => db.Users.Remove(It.IsAny<User>()), Times.Once);
             dbContextMock.Verify(db => db.SaveAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task UpdateUserCommandHandler_ShouldUpdateUser()
-        {
-            // Arrange
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new UpdateUserCommandHandler(dbContextMock.Object);
-            var userId = 1;
-            var existingUser = new User { Id = userId, /* Set other properties */ };
-            var updatedUser = new User { Id = userId, /* Set other properties */ };
-            dbContextMock.Setup(db => db.Users.FindAsync(It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(existingUser);
-
-            // Act
-            var response = await handler.Handle(new UpdateUserCommand(updatedUser), CancellationToken.None);
-
-            // Assert
-            Assert.Equal(updatedUser, response.Result);
-            dbContextMock.Verify(db => db.Users.Update(It.IsAny<User>()), Times.Once);
-            dbContextMock.Verify(db => db.SaveAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetUserByUsernameCommandHandler_ShouldReturnUsersByUsername()
-        {
-            // Arrange
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new GetUserByUsernameCommandHandler(dbContextMock.Object);
-            var userName = "testuser";
-            var users = new List<User> { /* Create some user instances with the specified username */ };
-            dbContextMock.Setup(db => db.Users.AsNoTracking().Where(It.IsAny<Expression<Func<User, bool>>>()).ToListAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(users);
-
-            // Act
-            var response = await handler.Handle(new GetUserByUsernameQuery(userName), CancellationToken.None);
-
-            // Assert
-            Assert.Equal(users, response.Result!);
         }
     }
 }

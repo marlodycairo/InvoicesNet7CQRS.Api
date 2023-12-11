@@ -1,5 +1,4 @@
-﻿using InvoicesNet7CQRS.Api.Models;
-using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
+﻿using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
 using InvoicesNet7CQRS.Domain.Commands.UserCommands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
