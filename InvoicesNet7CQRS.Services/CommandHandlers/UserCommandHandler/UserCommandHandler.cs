@@ -127,6 +127,8 @@ namespace InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler
 
                 if (user is not null)
                 {
+                    _context.Users.Entry(user).State = EntityState.Detached;
+
                     _context.Users.Update(request._user);
 
                     await _context.SaveAsync();

@@ -1,11 +1,7 @@
-﻿using InvoicesNet7CQRS.Data.Context;
-using InvoicesNet7CQRS.Data.Entities;
-using InvoicesNet7CQRS.Data.Interfaces;
+﻿using InvoicesNet7CQRS.Data.Entities;
 using InvoicesNet7CQRS.Domain.Commands.CustomerCommands;
-using InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler;
-using InvoicesNet7CQRS.Tests.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using Moq;
+using InvoicesNet7CQRS.Domain.Commands.UserCommands;
+using InvoicesNet7CQRS.Tests.Context;
 using static InvoicesNet7CQRS.Services.CommandHandlers.CustomerCommandHandler.UserCommandHandler;
 
 namespace InvoicesNet7CQRS.Tests
@@ -13,88 +9,174 @@ namespace InvoicesNet7CQRS.Tests
     public class UserHandlersTests
     {
         [Fact]
-        public async Task CreateUserCommandHandler_ShouldCreateUser()
+        public async Task CreateUserCommandHandler_ShouldCreateUserSuccessfully()
         {
-            var dbContextMock = new Mock<ITestDbContext>();
-            var userDbSetMock = new Mock<DbSet<User>>();
-            dbContextMock.Setup(db => db.Users).Returns(userDbSetMock.Object);
+            var options = TestDbContext.Create();
 
-            var userCommandHandler = new UserCommandHandler.CreateUserCommandHandler(dbContextMock.Object);
-
-            var user = new User
+            using (var context = new InMemoryDbContext(options))
             {
-                Id = 3,
-                FirstName = "Alice",
-                LastName = "Wonderland",
-                Email = "alicew@live.com",
-                Username = "alice",
-                Pass = "1234"
-            };
+                var handler = new CreateUserCommandHandler(context);
 
-            var createUserCommand = new CreateUserCommand(user);
+                var userToCreate = new User { Id = 3, FirstName = "Juan", LastName = "Arenas", Email = "jarenas@yahua.com", Username = "juan", Pass = "1234" };
 
-            var response = await userCommandHandler.Handle(createUserCommand, CancellationToken.None);
+                var createUserCommand = new CreateUserCommand(userToCreate);
 
-            Assert.NotNull(response);
-            Assert.Equal(user, response.Result);
-            Assert.Equal("Saved successfully!", response.Message);
-            Assert.Null(response.Error);
+                var response = await handler.Handle(createUserCommand, CancellationToken.None);
 
-            userDbSetMock.Verify(dbSet => dbSet.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
-            dbContextMock.Verify(db => db.SaveAsync(), Times.Once);
-        }
+                Assert.NotNull(response);
 
-        [Fact]
-        public async Task GetAllUsersCommandHandler_ShouldNotReturnAllUsers()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "InMemoryDatabaseTest")
-                .Options;
+                Assert.Equal(userToCreate, response.Result);
 
-            using (var context = new ApplicationDbContext(options))
-            {
-                var handler = new GetAllUsersCommandHander(context);
-                var query = new GetAllUsersQuery();
-
-                var result = await handler.Handle(query, CancellationToken.None);
-
-                Assert.Empty(result.Result!);
+                Assert.Equal("Saved successfully!", response.Message);
             }
         }
 
         [Fact]
-        public async Task GetUserById_ShouldNotReturnUser()
+        public async Task GetAllUsersCommandHandler_ShouldReturnAllUsers()
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "InMemoryDatabaseTest")
-                .Options;
+            var options = TestDbContext.Create();
 
-            using (var context = new ApplicationDbContext(options))
+            using (var context = new InMemoryDbContext(options))
             {
+                var handler = new GetAllUsersCommandHander(context);
+
+                var usersInDatabase = new List<User>
+                {
+                    new User { Id = 1, FirstName = "Ana", LastName = "Sanchez", Email = "asanchez@yahua.net", Username = "ana", Pass = "1234" },
+                    new User { Id = 2, FirstName = "Dany", LastName = "Barrera", Email = "dbarrera@yahua.es", Username = "dany", Pass = "1234" },
+                    new User { Id = 3, FirstName = "Juan", LastName = "Arenas", Email = "jarenas@yahua.com", Username = "juan", Pass = "1234" }
+                };
+
+                context.Users.AddRange(usersInDatabase);
+
+                await context.SaveAsync();
+
+                var response = await handler.Handle(new GetAllUsersQuery(), CancellationToken.None);
+
+                Assert.NotNull(response);
+
+                Assert.True(usersInDatabase.Count().Equals(response.Result!.Count()));
+            }
+        }
+
+        [Fact]
+        public async Task GetUserByIdCommandHandler_ShouldReturnUserById()
+        {
+            var options = TestDbContext.Create();
+
+            using (var context = new InMemoryDbContext(options))
+            {
+                var userIdToRetrieve = 2;
+
+                var userToRetrieve = new User { Id = userIdToRetrieve, FirstName = "Dany", LastName = "Barrera", Email = "dbarrera@yahua.es", Username = "dany", Pass = "1234" };
+
+                context.Users.Add(userToRetrieve);
+
+                await context.SaveAsync();
+
                 var handler = new GetUserByIdCommandHandler(context);
-                var userId = 2;
-                var command = new GetUserByIdQuery(userId);
 
-                var result = await handler.Handle(command, CancellationToken.None);
+                var getUserByIdQuery = new GetUserByIdQuery(userIdToRetrieve);
 
-                Assert.Null(result.Result);
+                var response = await handler.Handle(getUserByIdQuery, CancellationToken.None);
+
+                Assert.NotNull(response);
+
+                Assert.Equal(userToRetrieve, response.Result);
             }
         }
 
         [Fact]
         public async Task DeleteUserCommandHandler_ShouldDeleteUser()
         {
-            var dbContextMock = new Mock<IDbContext>();
-            var handler = new DeleteUserCommandHandler(dbContextMock.Object);
-            var userId = 1;
-            var user = new User { Id = userId };
-            dbContextMock.Setup(db => db.Users.FindAsync(It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(user);
+            var options = TestDbContext.Create();
 
-            await handler.Handle(new DeleteUserCommand(userId), CancellationToken.None);
+            using (var context = new InMemoryDbContext(options))
+            {
+                var userIdToDelete = 1;
 
-            dbContextMock.Verify(db => db.Users.Remove(It.IsAny<User>()), Times.Once);
-            dbContextMock.Verify(db => db.SaveAsync(), Times.Once);
+                var userToDelete = new User { Id = userIdToDelete, FirstName = "Ana", LastName = "Sanchez", Email = "asanchez@yahua.net", Username = "ana", Pass = "1234" };
+
+                context.Users.Add(userToDelete);
+
+                await context.SaveAsync();
+
+                var handler = new DeleteUserCommandHandler(context);
+
+                var deleteUserCommand = new DeleteUserCommand(userIdToDelete);
+
+                await handler.Handle(deleteUserCommand, CancellationToken.None);
+
+                Assert.Empty(context.Users);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateUserCommandHandler_ShouldUpdateUser()
+        {
+            var options = TestDbContext.Create();
+
+            using (var context = new InMemoryDbContext(options))
+            {
+                var userIdToUpdate = 3;
+
+                var originalUser = new User { Id = userIdToUpdate, FirstName = "Juan", LastName = "Arenas", Email = "jarenas@yahua.com", Username = "juan", Pass = "1234" };
+
+                context.Users.Add(originalUser);
+
+                await context.SaveAsync();
+
+                var updatedUser = new User { Id = userIdToUpdate, FirstName = "Juan Felipe", LastName = "Arenas De los Ríos", Email = "juanfe@live.com", Username = "juan", Pass = "1234" };
+
+                var handler = new UpdateUserCommandHandler(context);
+
+                var updateUserCommand = new UpdateUserCommand(updatedUser);
+
+                var response = await handler.Handle(updateUserCommand, CancellationToken.None);
+
+                Assert.NotNull(response);
+
+                Assert.Equal(updatedUser, response.Result);
+
+                Assert.Equal("User updated successfully.", response.Message);
+
+                // Check if the user has been updated in the database
+                var userInDatabase = await context.Users.FindAsync(userIdToUpdate);
+
+                Assert.Equal(updatedUser, userInDatabase);
+            }
+        }
+
+        [Fact]
+        public async Task GetUserByUsernameCommandHandler_ShouldReturnUsersByUsername()
+        {
+            var options = TestDbContext.Create();
+
+            using (var context = new InMemoryDbContext(options))
+            {
+                var usernameToRetrieve = "dany";
+
+                var usersToRetrieve = new List<User>
+                {
+                    new User { Id = 1, FirstName = "Ana", LastName = "Sanchez", Email = "asanchez@yahua.net", Username = "ana", Pass = "1234" },
+                    new User { Id = 2, FirstName = "Dany", LastName = "Barrera", Email = "dbarrera@yahua.es", Username = "dany", Pass = "1234" },
+                    new User { Id = 3, FirstName = "Juan", LastName = "Arenas", Email = "jarenas@yahua.com", Username = "juan", Pass = "1234" }
+                };
+
+                context.Users.AddRange(usersToRetrieve);
+
+                await context.SaveAsync();
+
+                var handler = new GetUserByUsernameCommandHandler(context);
+
+                var getUserByUsernameQuery = new GetUserByUsernameQuery(usernameToRetrieve);
+
+                var response = await handler.Handle(getUserByUsernameQuery, CancellationToken.None);
+
+                Assert.NotNull(response);
+
+                Assert.Equal(usernameToRetrieve, response.Result!.FirstOrDefault()!.Username);
+            }
         }
     }
 }
